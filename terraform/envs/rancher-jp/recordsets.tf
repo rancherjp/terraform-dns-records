@@ -19,5 +19,12 @@ variable "recordsets" {
       ttl     = "300"
       rrdatas = "rancherjp.herokuapp.com."
     },
+    {
+      // CNAME: www.rancher.jp
+      name    = "www."
+      type    = "CNAME"
+      ttl     = "300"
+      rrdatas = "rancherjp.github.io."
+    },
   ]
 }
