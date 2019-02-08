@@ -12,5 +12,12 @@ variable "recordsets" {
       ttl     = "300"
       rrdatas = "0 issue \"letsencrypt.org\""
     },
+    {
+      // CNAME: slack.rancher.jp
+      name    = "slack."
+      type    = "CNAME"
+      ttl     = "300"
+      rrdatas = "rancherjp.herokuapp.com."
+    },
   ]
 }
