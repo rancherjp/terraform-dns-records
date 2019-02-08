@@ -1,0 +1,180 @@
+version: 2.1
+
+#- ------------------------------------------------------------------
+#- executors
+#- ------------------------------------------------------------------
+executors:
+  terraform-default:
+    docker:
+      - image: hashicorp/terraform:0.11.11
+        environment:
+          GOOGLE_APPLICATION_CREDENTIALS: creds/serviceaccount.json
+
+#- ------------------------------------------------------------------
+#- commands
+#- ------------------------------------------------------------------
+commands:
+  default_service_account:
+    parameters:
+      domain_name:
+        type: string
+    steps:
+      - run:
+          name: 'set Google Cloud service account'
+          command: |
+            cd terraform/envs/<< parameters.domain_name >>
+            mkdir -p ./creds
+            echo "${GCLOUD_SERVICE_KEY}" | base64 -d > "./creds/serviceaccount.json"
+            ls -la "./creds/serviceaccount.json"
+
+  default_terraform_init:
+    parameters:
+      domain_name:
+        type: string
+    steps:
+      - run:
+          name: 'terraform init'
+          command: |
+            cd terraform/envs/<< parameters.domain_name >>
+            terraform init
+
+  default_tfnotify:
+    steps:
+      - run:
+          name: 'Dependencies installing'
+          command: |
+            apk add --no-cache curl jq
+
+      - run:
+          name: 'tfnotify downloading'
+          command: |
+            export DOWNLOAD_FILE_NAME=$(curl -s https://api.github.com/repos/mercari/tfnotify/releases | \
+              jq -r '.[0].assets[] | select(.name | contains("linux_amd64")) | .name')
+
+            curl -sfSL "$(curl -s https://api.github.com/repos/mercari/tfnotify/releases | \
+                jq -r '.[0].assets[] | select(.name | contains("linux_amd64")) | .browser_download_url')" \
+              -o "${DOWNLOAD_FILE_NAME}"
+            tar -zxvf "${DOWNLOAD_FILE_NAME}"
+            cp tfnotify_*/tfnotify /usr/local/bin
+
+      - run:
+          name: 'test tfnotify command'
+          command: |
+            test -e /usr/local/bin/tfnotify
+
+#- ------------------------------------------------------------------
+#- job
+#- ------------------------------------------------------------------
+jobs:
+  test-pre:
+    parameters:
+      domain_name:
+        type: string
+    executor: terraform-default
+    steps:
+      - checkout
+      - default_tfnotify
+
+      - run:
+          name: 'PWD'
+          command: |
+            pwd
+            ls -la
+
+      - run:
+          name: 'Environment variable check'
+          command: |
+            cd terraform/envs/<< parameters.domain_name >>
+            test ! -z "${GCLOUD_SERVICE_KEY}"
+
+      - default_service_account:
+          domain_name: << parameters.domain_name >>
+
+      - default_terraform_init:
+          domain_name: << parameters.domain_name >>
+
+      - run:
+          name: 'show terraform verion'
+          command: |
+            cd terraform/envs/<< parameters.domain_name >>
+            terraform version
+
+      - run:
+          name: 'terraform fmt'
+          command: |
+            cd terraform/envs/<< parameters.domain_name >>
+            terraform fmt | tfnotify --config /root/project/tfnotify.yml fmt
+
+      - run:
+          name: 'terraform validate'
+          command: |
+            cd terraform/envs/<< parameters.domain_name >>
+            terraform validate
+
+  test:
+    parameters:
+      domain_name:
+        type: string
+    executor: terraform-default
+    steps:
+      - checkout
+      - default_tfnotify
+
+      - default_service_account:
+          domain_name: << parameters.domain_name >>
+
+      - default_terraform_init:
+          domain_name: << parameters.domain_name >>
+
+      - run:
+          name: 'terraform plan'
+          command: |
+            cd terraform/envs/<< parameters.domain_name >>
+            terraform plan | tfnotify --config /root/project/tfnotify.yml plan
+
+  deploy:
+    parameters:
+      domain_name:
+        type: string
+    executor: terraform-default
+    steps:
+      - checkout
+      - default_tfnotify
+
+      - default_service_account:
+          domain_name: << parameters.domain_name >>
+
+      - default_terraform_init:
+          domain_name: << parameters.domain_name >>
+
+      - run:
+          name: 'terraform apply'
+          command: |
+            cd terraform/envs/<< parameters.domain_name >>
+            terraform apply -auto-approve | tfnotify --config /root/project/tfnotify.yml apply
+
+#- ------------------------------------------------------------------
+#- workflows
+#- ------------------------------------------------------------------
+workflows:
+  terraform:
+    jobs:
+      - test-pre:
+          name: rancher-jp_test-pre
+          domain_name: rancher-jp
+
+      - test:
+          name: rancher-jp_test
+          domain_name: rancher-jp
+          requires:
+            - rancher-jp_test-pre
+
+      - deploy:
+          name: rancher-jp_deploy
+          domain_name: rancher-jp
+          requires:
+            - rancher-jp_test-pre
+            - rancher-jp_test
+          filters:
+            branches:
+              only: master
