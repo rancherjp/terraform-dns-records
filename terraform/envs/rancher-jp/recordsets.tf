@@ -26,5 +26,22 @@ variable "recordsets" {
       ttl     = "300"
       rrdatas = "rancherjp.github.io."
     },
+    {
+      // CNAME: growi.rancher.jp
+      name    = "growi."
+      type    = "CNAME"
+      ttl     = "300"
+      rrdatas = "growi01.tyo1.conoha.aoya6i.net."
+    },
+    {
+      // CNAME: growi.rancher.jp
+      name    = "codimd."
+      type    = "CNAME"
+      ttl     = "300"
+      rrdatas = "growi01.tyo1.conoha.aoya6i.net."
+    },
+    
+    
+    
   ]
 }
