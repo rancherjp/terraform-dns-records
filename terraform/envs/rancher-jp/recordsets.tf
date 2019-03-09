@@ -40,8 +40,12 @@ variable "recordsets" {
       ttl     = "300"
       rrdatas = "growi01.tyo1.conoha.aoya6i.net."
     },
-    
-    
-    
+    {
+      // CNAME: status.rancher.jp
+      name    = "status."
+      type    = "CNAME"
+      ttl     = "300"
+      rrdatas = "stats.uptimerobot.com."
+    },
   ]
 }
