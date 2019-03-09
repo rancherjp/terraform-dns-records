@@ -34,7 +34,7 @@ variable "recordsets" {
       rrdatas = "growi01.tyo1.conoha.aoya6i.net."
     },
     {
-      // CNAME: growi.rancher.jp
+      // CNAME: codimd.rancher.jp
       name    = "codimd."
       type    = "CNAME"
       ttl     = "300"
