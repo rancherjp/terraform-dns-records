@@ -31,14 +31,14 @@ variable "recordsets" {
       name    = "growi."
       type    = "CNAME"
       ttl     = "300"
-      rrdatas = "growi01.tyo1.conoha.aoya6i.net."
+      rrdatas = "v150-95-181-129.a0e3.g.tyo1.static.cnode.io."
     },
     {
       // CNAME: codimd.rancher.jp
       name    = "codimd."
       type    = "CNAME"
       ttl     = "300"
-      rrdatas = "growi01.tyo1.conoha.aoya6i.net."
+      rrdatas = "v150-95-181-129.a0e3.g.tyo1.static.cnode.io."
     },
     {
       // CNAME: status.rancher.jp
