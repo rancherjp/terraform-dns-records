@@ -56,8 +56,7 @@ commands:
                 jq -r '.[0].assets[] | select(.name | contains("linux_amd64")) | .browser_download_url')" \
               -o "${DOWNLOAD_FILE_NAME}"
             tar -zxvf "${DOWNLOAD_FILE_NAME}"
-            ls -lah
-            cp tfnotify_*/tfnotify /usr/local/bin
+            cp tfnotify /usr/local/bin
 
       - run:
           name: 'test tfnotify command'
