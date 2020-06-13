@@ -19,6 +19,9 @@ variable "domain_description" {
 resource "google_dns_managed_zone" "zone" {
   name        = "${replace(var.domain_name, ".", "-")}"
   dns_name    = "${var.domain_name}."
+  dnssec_config {
+    state     = "on"
+  }
   project     = "${var.project}"
   description = "${var.domain_description}"
 }
